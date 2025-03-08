@@ -1,0 +1,7 @@
+client-files = [ 
+    'client/speedometer/index.html',
+    'client/speedometer/enginesymbol.png'
+]
+client-main = 'client/client.js'
+main = 'server/server.mjs'
+type = 'js'
