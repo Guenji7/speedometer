@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Analog Speedometer</title>
+    <style>
+        body {
+            margin: 0;
+            background: transparent;
+            overflow: hidden;
+            display: none;
+            font-family: 'Arial', sans-serif;
+        }
+        canvas {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            border: 2px solid #333;
+            border-radius: 15px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <canvas id="speedometer" width="300" height="200"></canvas>
+
+    <script>
+        const canvas = document.getElementById('speedometer');
+        const ctx = canvas.getContext('2d');
+        let lastSpeed = 0;
+        let lastRpm = 0;
+        let isVisible = false;
+
+        // Initialize canvas
+        function initGauge() {
+            drawBackground();
+            drawNeedles(lastSpeed, lastRpm);
+        }
+
+        window.addEventListener('message', (event) => {
+            switch(event.data.type) {
+                case 'show':
+                    isVisible = event.data.visible;
+                    if(isVisible) {
+                        document.body.style.display = 'block';
+                        initGauge();
+                    } else {
+                        document.body.style.display = 'none';
+                    }
+                    break;
+                case 'update':
+                    lastSpeed = Math.min(Math.max(event.data.speed, 0), 240);
+                    lastRpm = Math.min(Math.max(event.data.rpm * 10000, 0), 10000);
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    drawBackground();
+                    drawNeedles(lastSpeed, lastRpm);
+                    break;
+            }
+        });
+
+        function drawBackground() {
+            // Draw background
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Speed gauge (right)
+            ctx.beginPath();
+            ctx.arc(200, 100, 80, -0.45 * Math.PI, 0.45 * Math.PI);
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 20;
+            ctx.stroke();
+
+            // RPM gauge (left)
+            ctx.beginPath();
+            ctx.arc(100, 100, 80, -0.45 * Math.PI, 0.45 * Math.PI);
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 20;
+            ctx.stroke();
+
+            // Add labels
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px Arial';
+            ctx.fillText('0', 150, 150);
+            ctx.fillText('120', 260, 150);
+            ctx.fillText('0', 30, 150);
+            ctx.fillText('10k', 170, 150);
+        }
+
+        function drawNeedles(speed, rpm) {
+            // Speed needle (right)
+            const speedAngle = ((speed / 240) * 0.9) - 0.45;
+            drawNeedle(200, 100, speedAngle, '#0f0', 4);
+
+            // RPM needle (left)
+            const rpmAngle = ((rpm / 10000) * 0.9) - 0.45;
+            drawNeedle(100, 100, rpmAngle, '#f00', 4);
+        }
+
+        function drawNeedle(centerX, centerY, angle, color, width) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(angle * Math.PI);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -70);
+            ctx.lineWidth = width;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+            ctx.restore();
+        }
+    </script>
+</body>
+</html>
